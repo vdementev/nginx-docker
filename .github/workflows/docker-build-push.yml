@@ -2,18 +2,30 @@ name: Build & Push Images
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "Dockerfile.*"
-      - ".github/workflows/**"
+    branches: [ main ]
+    # paths:
+    #   - "Dockerfile"
+    #   - "Dockerfile.*"
+    #   - ".github/workflows/**"
   workflow_dispatch:
+
 
 env:
   IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/nginx
 
+concurrency:
+  group: build-image-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
