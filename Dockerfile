@@ -1,4 +1,4 @@
-FROM alpine:3.22
+FROM alpine:3.23
 
 RUN set -eux; \
     apk update; \
@@ -10,9 +10,7 @@ RUN set -eux; \
     nginx-mod-http-brotli; \
     rm -rf /var/cache/apk/*; \
     rm -rf /root/.cache; \
-    rm -rf /tmp/*; \
-    echo "net.core.rmem_max=2500000 " >> /etc/sysctl.conf; \
-    echo "net.core.wmem_max=2500000 " >> /etc/sysctl.conf
+    rm -rf /tmp/*;
 
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 
