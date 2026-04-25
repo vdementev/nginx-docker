@@ -77,7 +77,7 @@ jobs:
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_DESCRIPTION_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ env.IMAGE_REPO }}
           short-description: "Alpine nginx for static/SPA behind a reverse proxy: brotli + zstd + Prometheus stub_status."
           readme-filepath: ./DOCKERHUB.md
