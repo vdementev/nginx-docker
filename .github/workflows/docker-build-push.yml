@@ -15,7 +15,7 @@ env:
 
 concurrency:
   group: build-image-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-push:
@@ -50,8 +50,6 @@ jobs:
           images: ${{ env.IMAGE_REPO }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=sha-,format=short
-            type=schedule,pattern={{date 'YYYYMMDD'}}
           labels: |
             org.opencontainers.image.title=nginx
             org.opencontainers.image.description=Reusable nginx base — brotli + zstd + Prometheus stub_status.
@@ -59,7 +57,31 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=MIT
 
+      - name: Build (load for scan)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_REPO }}:scan
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_REPO }}:scan
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
       - name: Build & push
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -72,6 +94,20 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image with Cosign (keyless)
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          for tag in $TAGS; do
+            cosign sign --yes "${tag}@${DIGEST}"
+          done
 
       - name: Sync Docker Hub description
         uses: peter-evans/dockerhub-description@v4
