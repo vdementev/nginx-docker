@@ -11,7 +11,7 @@
 # security headers, and X-Forwarded-For trust for any RFC1918/ULA hop.
 # syntax=docker/dockerfile:1.6
 
-FROM alpine:3.23
+FROM mirror.gcr.io/library/alpine:3.23
 
 # OCI metadata. Source/url/title/licenses can be overridden at build time
 # via --label so downstream projects don't have to fork this Dockerfile.
