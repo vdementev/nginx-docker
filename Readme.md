@@ -114,3 +114,5 @@ override the apk install in a downstream Dockerfile:
 FROM alpine:3.23
 RUN apk add nginx=1.28.0-r0 nginx-mod-http-brotli nginx-mod-http-zstd
 ```
+
+bump
