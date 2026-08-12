@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "25 3 * * 1" # weekly rebuild: fresh base layers + package updates
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    uses: vdementev/docker-workflows/.github/workflows/build-image.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      image: nginx
+      push: ${{ github.event_name != 'pull_request' }}
+      tags: |
+        type=raw,value=latest
+      labels: |
+        org.opencontainers.image.title=nginx
+        org.opencontainers.image.description=Reusable nginx base — brotli + zstd + Prometheus stub_status.
+        org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+        org.opencontainers.image.revision=${{ github.sha }}
+        org.opencontainers.image.licenses=MIT
+    secrets: inherit
+
+  sync-description:
+    if: github.event_name != 'pull_request'
+    needs: build
+    uses: vdementev/docker-workflows/.github/workflows/sync-description.yml@v1
+    with:
+      image: nginx
+      short-description: "Alpine nginx for static/SPA behind a reverse proxy: brotli + zstd + Prometheus stub_status."
+    secrets: inherit
