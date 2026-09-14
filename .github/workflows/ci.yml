@@ -23,6 +23,10 @@ jobs:
       push: ${{ github.event_name != 'pull_request' }}
       tags: |
         type=raw,value=latest
+      # Smoke-tests the locally built amd64 image before it can be published:
+      # SPA fallback, cache + security headers, br/zstd/gzip, :8080, rootless
+      # mode. $IMAGE is set by the reusable workflow.
+      test-command: ./tests.sh
       labels: |
         org.opencontainers.image.title=nginx
         org.opencontainers.image.description=Reusable nginx base — brotli + zstd + Prometheus stub_status.
