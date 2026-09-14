@@ -20,10 +20,14 @@ FROM mirror.gcr.io/library/alpine:latest
 
 # OCI metadata. Source/url/title/licenses can be overridden at build time
 # via --label so downstream projects don't have to fork this Dockerfile.
-LABEL org.opencontainers.image.title="nginx"
-LABEL org.opencontainers.image.description="Reusable nginx base — brotli + zstd + Prometheus stub_status."
-LABEL org.opencontainers.image.source="https://github.com/vdementev/docker-nginx"
-LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.title="nginx" \
+      org.opencontainers.image.description="Reusable nginx base — brotli + zstd + Prometheus stub_status." \
+      org.opencontainers.image.url="https://hub.docker.com/r/dementev/nginx" \
+      org.opencontainers.image.documentation="https://github.com/vdementev/nginx-docker#readme" \
+      org.opencontainers.image.source="https://github.com/vdementev/nginx-docker" \
+      org.opencontainers.image.vendor="Lotus Web Agency" \
+      org.opencontainers.image.authors="Vasilii Dementev https://vasiliidementev.com" \
+      org.opencontainers.image.licenses="MIT"
 
 # Entrypoint knobs. NGINX_DROP_MASTER=true runs the master as NGINX_USER
 # instead of root; see docker-entrypoint.sh.

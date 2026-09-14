@@ -9,12 +9,17 @@ by the proxy in front; this image just serves files fast and cheap.
 
 ## Tags
 
-| Tag      | Description                                                     |
-|----------|-----------------------------------------------------------------|
-| `latest` | Every merge to `main`, plus a weekly rebuild for package updates. |
+| Tag | Contents |
+|---|---|
+| `latest` | The newest build — every merge to `main`, plus a weekly rebuild for package updates. |
+| `1.30.4` | The exact nginx version inside the image. |
+| `1.30` | The newest patch of that nginx minor. |
 
-Multi-arch: `linux/amd64`, `linux/arm64`. SBOM, max-mode build
-provenance and a Cosign keyless signature on every published digest.
+Version tags are read out of the image *after* it is built and tested, so a tag
+can never claim a version the image does not run.
+
+Multi-arch: `linux/amd64`, `linux/arm64`. SBOM, max-mode build provenance and a
+Cosign keyless signature on every published digest.
 
 ## Quick start
 
@@ -78,7 +83,7 @@ The default vhost already does:
   backend pool; HTTP/3 (QUIC/UDP) is pointless on a docker bridge with
   zero packet loss.
 
-## Security note
+## Do not publish `:80` directly
 
 Because `X-Forwarded-For` is trusted from any private range, **do NOT
 publish `:80` directly to the public internet**. The trusted-proxy
@@ -107,6 +112,54 @@ services:
     expose: ["9113"]
 ```
 
-## Source
+## Security and provenance
 
-[github.com/vdementev/docker-nginx](https://github.com/vdementev/docker-nginx) · MIT license
+Every published digest is built by the shared pipeline in
+[vdementev/docker-workflows](https://github.com/vdementev/docker-workflows).
+Pull requests build, test and scan without publishing; `main` is
+branch-protected, so nothing reaches Docker Hub without a green check behind it.
+A Trivy gate fails the build on any *fixable* CRITICAL or HIGH finding, and each
+published digest carries an SBOM, max-mode SLSA provenance and a keyless Cosign
+signature.
+
+Verify what you pulled:
+
+```sh
+cosign verify \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp 'github.com/vdementev/' \
+  dementev/nginx:latest
+```
+
+[SECURITY.md](https://github.com/vdementev/nginx-docker/blob/main/SECURITY.md) is the reporting channel and the response
+targets; [SUPPORT.md](https://github.com/vdementev/nginx-docker/blob/main/SUPPORT.md) covers tag lifecycle, pinning and
+patch cadence.
+
+## Related images
+
+One family, built by the same pipeline, meant to run together — a proxy in
+front, an app runtime, a database, and a way into it.
+
+| Image | What it does |
+|---|---|
+| [`dementev/angie`](https://hub.docker.com/r/dementev/angie) — [source](https://github.com/vdementev/angie-docker) | Public-facing reverse proxy and TLS terminator — Angie, the nginx fork, with brotli, zstd and cache-purge |
+| **[`dementev/nginx`](https://hub.docker.com/r/dementev/nginx)** — this image | Static sites and SPAs behind that proxy — brotli/zstd siblings, Prometheus stub_status |
+| [`dementev/php-fpm-with-ext`](https://hub.docker.com/r/dementev/php-fpm-with-ext) — [source](https://github.com/vdementev/docker-php-fpm-with-ext) | PHP-FPM and CLI, PHP 7.0 → 8.5, with the extensions most projects reach for |
+| [`dementev/mysql-percona`](https://hub.docker.com/r/dementev/mysql-percona) — [source](https://github.com/vdementev/mysql-percona-docker) | Percona Server for MySQL 8.4 LTS, XtraBackup built in, no root inside |
+| [`dementev/adminer`](https://hub.docker.com/r/dementev/adminer) — [source](https://github.com/vdementev/adminer-docker) | Adminer 6 with every driver it supports, for reaching any of the above |
+
+## Maintainer
+
+Built and maintained by [Vasilii Dementev](https://vasiliidementev.com) at
+[Lotus Web Agency](https://lotuswebagency.com). These images are not a side
+project — they are the base layer under the client and product systems we run,
+which is why they are gated, tested and signed rather than pushed by hand.
+
+Issues and pull requests:
+[github.com/vdementev/nginx-docker](https://github.com/vdementev/nginx-docker).
+Need this kind of infrastructure built or maintained for your own stack?
+[lotuswebagency.com](https://lotuswebagency.com).
+
+Packaging in this repository is MIT licensed — see
+[LICENSE](https://github.com/vdementev/nginx-docker/blob/main/LICENSE). The software
+inside the image keeps its own upstream licenses.
