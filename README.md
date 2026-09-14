@@ -5,6 +5,9 @@ Reusable nginx base image for static sites and SPAs, designed to live
 docker network. TLS, HTTP/2, public-internet exposure are handled by
 the proxy in front; this layer just serves files fast and cheap.
 
+Published as [`dementev/nginx`](https://hub.docker.com/r/dementev/nginx)
+for `linux/amd64` and `linux/arm64`.
+
 `FROM` it in your project's Dockerfile, drop your build output into
 `/app`, and you're done.
 
@@ -17,8 +20,8 @@ the proxy in front; this layer just serves files fast and cheap.
 | `1.30` | The newest patch of that nginx minor. |
 
 Version tags are read out of the image *after* it is built and tested, so a tag
-can never claim a version the image does not run. `linux/amd64` and
-`linux/arm64`. Lifecycle and pinning: [SUPPORT.md](SUPPORT.md).
+can never claim a version the image does not run. Lifecycle and pinning:
+[SUPPORT.md](SUPPORT.md).
 
 ## What's in the image
 
