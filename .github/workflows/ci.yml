@@ -27,11 +27,18 @@ jobs:
       # SPA fallback, cache + security headers, br/zstd/gzip, :8080, rootless
       # mode. $IMAGE is set by the reusable workflow.
       test-command: ./tests.sh
+      # The apk package is deliberately unpinned, so the version tags are read
+      # back out of the image that just passed the tests: 1.30.4 and 1.30.
+      version-command: docker run --rm "$IMAGE" nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9][0-9.]*\).*|\1|p'
       labels: |
         org.opencontainers.image.title=nginx
         org.opencontainers.image.description=Reusable nginx base — brotli + zstd + Prometheus stub_status.
+        org.opencontainers.image.url=https://hub.docker.com/r/dementev/nginx
+        org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}#readme
         org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
         org.opencontainers.image.revision=${{ github.sha }}
+        org.opencontainers.image.vendor=Lotus Web Agency
+        org.opencontainers.image.authors=Vasilii Dementev https://vasiliidementev.com
         org.opencontainers.image.licenses=MIT
     secrets: inherit
 
