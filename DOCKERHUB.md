@@ -9,19 +9,17 @@ by the proxy in front; this image just serves files fast and cheap.
 
 ## Tags
 
-| Tag           | Description                                                |
-|---------------|------------------------------------------------------------|
-| `latest`      | Latest build from `main`.                                  |
-| `sha-<short>` | Pinned build by commit SHA (immutable).                    |
-| `YYYYMMDD`    | Daily nightly tag (Alpine + nginx package refresh).        |
+| Tag      | Description                                                     |
+|----------|-----------------------------------------------------------------|
+| `latest` | Every merge to `main`, plus a weekly rebuild for package updates. |
 
-Multi-arch: `linux/amd64`, `linux/arm64`. SBOM and max-mode build
-provenance attached to every image.
+Multi-arch: `linux/amd64`, `linux/arm64`. SBOM, max-mode build
+provenance and a Cosign keyless signature on every published digest.
 
 ## Quick start
 
 ```dockerfile
-FROM vdementev/nginx:latest
+FROM dementev/nginx:latest
 COPY --from=build /app/dist /app
 ```
 
@@ -32,14 +30,15 @@ The default vhost already does:
 - Images, fonts (svg/png/woff/woff2/…) → `Cache-Control: public, max-age=604800`.
 - `/index.html` → `Cache-Control: no-store, must-revalidate`.
 - Baseline security headers (HSTS, X-Frame-Options, Referrer-Policy,
-  Permissions-Policy, X-Content-Type-Options) — CSP intentionally
-  omitted, set per app.
+  Permissions-Policy, X-Content-Type-Options) on **every** response —
+  CSP intentionally omitted, set per app.
 - Trusts `X-Forwarded-For` from any RFC1918 / loopback / ULA hop, so
   `$remote_addr` and access logs reflect the real client IP.
 
 ## What's inside
 
-- **Alpine 3.23** + **nginx** (apk-installed, tracks Alpine's package).
+- **Alpine stable** (`alpine:latest`, currently 3.24) + **nginx 1.30.x**
+  (apk-installed, tracks Alpine's package).
 - **brotli static** (`nginx-mod-http-brotli`) — serves `.br` siblings.
 - **zstd static** (`nginx-mod-http-zstd`) — serves `.zst` siblings.
 - Runtime **gzip** as a universal fallback for anything without a
@@ -48,6 +47,8 @@ The default vhost already does:
   `/healthz` on the same port for liveness probes.
 - No `ca-certificates`, no `tzdata` (nginx never makes outbound TLS
   calls here, and logs are UTC).
+- Optional rootless mode: `NGINX_DROP_MASTER=true` runs the master as
+  `nginx` instead of root.
 
 ## Default behaviour
 
@@ -65,6 +66,12 @@ The default vhost already does:
   dominate, threads sit idle.
 - `open_file_cache` (2000 entries) — saves an `open()`+`fstat()` per
   request on hot paths.
+- Buffered access log (`buffer=32k flush=5s`) — one `write()` per
+  ~32 KiB instead of one per request, so the Docker log driver can't
+  turn logging into request latency. Logs lag up to 5s.
+- `keepalive_requests 10000` — the peer is a proxy holding a small
+  persistent pool, not a browser; the default 1000 would force a
+  pointless TCP re-handshake every 1000 requests.
 - `absolute_redirect off` — redirects stay relative, so the internal
   container hostname can never leak via `Location:`.
 - HTTP/1.1 only. HTTP/2 multiplexing buys nothing on a small persistent
