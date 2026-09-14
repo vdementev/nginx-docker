@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Reusable nginx base image — designed to live BEHIND a reverse proxy
 # (HAProxy / Traefik / Angie / nginx) on a docker network.
 #
@@ -9,13 +10,13 @@
 # /etc/nginx/conf.d/default.conf for a non-default vhost. The included
 # nginx.conf serves /app on :80 with SPA-friendly defaults, baseline
 # security headers, and X-Forwarded-For trust for any RFC1918/ULA hop.
-# syntax=docker/dockerfile:1.6
 
-# Pinned to the current Alpine stable (not edge): same nginx 1.30.x as
-# edge ships, but with the stable branch's CVE backports and no risk of
-# a toolchain/ABI change landing mid-week. Renovate auto-merges digest
-# and patch refreshes; 3.25 will arrive as a PR.
-FROM mirror.gcr.io/library/alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+# Current Alpine stable, floating. Not `edge`: edge ships the same nginx
+# 1.30.x, so tracking it bought nothing but the risk of a toolchain or
+# ABI change landing mid-rebuild. Nothing here is version-pinned — the
+# weekly rebuild picks up new base images and packages on its own, and
+# every build runs tests.sh and the Trivy gate before it can publish.
+FROM mirror.gcr.io/library/alpine:latest
 
 # OCI metadata. Source/url/title/licenses can be overridden at build time
 # via --label so downstream projects don't have to fork this Dockerfile.
@@ -28,7 +29,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 # instead of root; see docker-entrypoint.sh.
 ENV NGINX_USER=nginx
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN set -eux; \
     apk update; \
@@ -38,16 +39,31 @@ RUN set -eux; \
         nginx-mod-http-brotli \
         nginx-mod-http-zstd \
         su-exec; \
-    # Tidy: apk caches, root .cache, /tmp, manpages and nginx docs that
-    # come with apk. Keeps the final image close to the bare nginx footprint.
+    # Tidy: apk caches, root .cache, /tmp, manpages, nginx docs and the
+    # logrotate wiring — dead weight in a container that logs to stdout.
+    # Keeps the final image close to the bare nginx footprint.
     # Note: ca-certificates and tzdata are NOT installed — this nginx
     # makes no outbound TLS calls (no proxy_pass over HTTPS, no DNS
     # resolver) and logs in UTC. If a downstream image needs either,
     # add `apk add ca-certificates tzdata`.
-    rm -rf /var/cache/apk/* /root/.cache /tmp/* /usr/share/man /usr/share/doc; \
-    chmod 755 /usr/local/bin/docker-entrypoint.sh
+    rm -rf /var/cache/apk/* /root/.cache /tmp/* /usr/share/man /usr/share/doc \
+           /etc/logrotate.d/nginx; \
+    # Hardening: nothing in this image needs to escalate. Alpine ships no
+    # setuid binary today, so this is a guard against a future package
+    # quietly adding one, not a fix for anything present.
+    find / -xdev -type f -perm /6000 -exec chmod a-s '{}' +
 
-COPY ./conf/ /etc/nginx/
+COPY --chmod=0644 ./conf/ /etc/nginx/
+
+# Build-time gate: a typo in the baked config fails the build instead of
+# crash-looping a container at deploy time.
+#
+# `nginx -t` runs as root here and leaves root-owned droppings behind — the
+# prefix-relative error log (hence -e) and the pid file — which a non-root
+# master (NGINX_DROP_MASTER=true) then can't write, so it dies at startup.
+RUN set -eux; \
+    nginx -t -e /dev/stderr; \
+    rm -f /run/nginx/nginx.pid
 
 WORKDIR /app
 

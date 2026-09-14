@@ -10,13 +10,16 @@ the proxy in front; this layer just serves files fast and cheap.
 
 ## What's in the image
 
-- **Alpine 3.24** (stable, pinned by digest) + **nginx 1.30.x**
+- **Alpine stable** (`alpine:latest`, currently 3.24) + **nginx 1.30.x**
   (apk-installed, follows Alpine's nginx track).
 - **brotli** static module (`nginx-mod-http-brotli`).
 - **zstd** static module (`nginx-mod-http-zstd`).
 - **stub_status** on a separate metrics server (`:8080`) for
   `nginx-prometheus-exporter` scrape, with `/healthz` for liveness.
 - `su-exec` + a 30-line entrypoint, for the optional rootless mode below.
+- Every setuid/setgid bit stripped at build time (Alpine ships none today —
+  it's a guard against a future package adding one), no logrotate wiring,
+  and a `nginx -t` gate so a typo in the baked config fails the build.
 - No `ca-certificates`, no `tzdata` — this nginx makes no outbound TLS
   calls and logs in UTC. Add either back in a downstream image if needed.
 
@@ -24,6 +27,12 @@ Alpine **stable**, not `edge`: edge happens to carry the same nginx
 1.30.x, so tracking it bought nothing but the risk of a toolchain or
 ABI change landing in the middle of a weekly rebuild. The stable branch
 carries the same CVE backports on a predictable cadence.
+
+Nothing is version-pinned or digest-pinned, on purpose. The weekly
+rebuild picks up new base images and packages by itself, and no build
+can publish without passing `tests.sh` and the Trivy gate first — so a
+floating tag is caught by CI rather than by a deploy. Pin downstream if
+you need a frozen artifact.
 
 ## Default behaviour
 
@@ -162,8 +171,9 @@ A PR builds `linux/amd64` + `linux/arm64`, runs `tests.sh` and a Trivy
 gate (fails on fixable CRITICAL/HIGH) without publishing; merging to
 `main` publishes to Docker Hub as `dementev/nginx:latest` with SBOM,
 max-mode provenance and Cosign keyless signing. A weekly cron rebuilds
-to pick up package updates, and Renovate auto-merges base-image digest
-and patch refreshes.
+to pick up base-image and package updates — which is also what keeps the
+floating `alpine:latest` honest, since that rebuild runs the same tests
+and scan.
 
 ## Versioning
 
@@ -177,3 +187,7 @@ control the rebuild cadence:
 FROM alpine:3.24
 RUN apk add nginx=1.30.4-r1 nginx-mod-http-brotli nginx-mod-http-zstd
 ```
+
+If you need a frozen base image rather than a frozen nginx, pin the
+digest of a published `dementev/nginx` build instead — every digest is
+Cosign-signed and carries an SBOM.

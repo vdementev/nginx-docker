@@ -3,16 +3,10 @@
   "extends": ["config:best-practices"],
   "packageRules": [
     {
-      "description": "Auto-merge base image digest/patch refreshes once CI is green",
+      "description": "Deliberately unpinned: the Dockerfile floats on alpine:latest and unversioned apk packages, and the weekly rebuild picks both up. Don't re-pin what config:best-practices would pin by default.",
       "matchManagers": ["dockerfile"],
-      "matchUpdateTypes": ["digest", "pin", "patch"],
-      "automerge": true
-    },
-    {
-      "description": "Minor/major base bumps stay as PRs for review",
-      "matchManagers": ["dockerfile"],
-      "matchUpdateTypes": ["minor", "major"],
-      "automerge": false
+      "pinDigests": false,
+      "enabled": false
     },
     {
       "description": "Keep the floating @v1 ref to our reusable workflows",

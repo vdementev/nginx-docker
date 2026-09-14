@@ -37,7 +37,7 @@ The default vhost already does:
 
 ## What's inside
 
-- **Alpine 3.24** (stable, digest-pinned) + **nginx 1.30.x**
+- **Alpine stable** (`alpine:latest`, currently 3.24) + **nginx 1.30.x**
   (apk-installed, tracks Alpine's package).
 - **brotli static** (`nginx-mod-http-brotli`) — serves `.br` siblings.
 - **zstd static** (`nginx-mod-http-zstd`) — serves `.zst` siblings.
