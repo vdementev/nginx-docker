@@ -162,7 +162,7 @@ nginx containers via repeated `--nginx.scrape-uri=...`.
 ```yaml
 services:
   nginx-exporter:
-    image: nginx/nginx-prometheus-exporter:1.4.0
+    image: nginx/nginx-prometheus-exporter:1.5.3
     command:
       - --nginx.scrape-uri=http://frontend:8080/stub_status
       - --nginx.scrape-uri=http://admin:8080/stub_status
