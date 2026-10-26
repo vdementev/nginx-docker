@@ -5,7 +5,7 @@
 | Tag | Contents |
 |---|---|
 | `latest` | The newest build. Moves on every merge to `main` and on the weekly rebuild. |
-| `1.30.4` | The exact nginx version inside the image. Republished in place (new digest, same tag) while that version is current. |
+| `1.30.6` | The exact nginx version inside the image. Republished in place (new digest, same tag) while that version is current. |
 | `1.30` | The newest patch release of that nginx minor. |
 
 Version tags are read out of the image after it is built and tested, so a tag

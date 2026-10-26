@@ -16,7 +16,7 @@ for `linux/amd64` and `linux/arm64`.
 | Tag | Contents |
 |---|---|
 | `latest` | The newest build. |
-| `1.30.4` | The exact nginx version inside the image. |
+| `1.30.6` | The exact nginx version inside the image. |
 | `1.30` | The newest patch of that nginx minor. |
 
 Version tags are read out of the image *after* it is built and tested, so a tag
@@ -194,8 +194,8 @@ and scan.
 ## Versioning
 
 The apk package is deliberately unpinned. Alpine's branch index only ever
-carries the newest `-rN`, so a pinned `nginx=1.30.4-r1` would break the weekly
-rebuild the moment Alpine publishes `-r2`. What you get instead is a version tag
+carries the newest `-rN`, so a pinned `nginx=1.30.6-r0` would break the weekly
+rebuild the moment Alpine publishes `-r1`. What you get instead is a version tag
 derived from the built image and a weekly rebuild that has to pass `tests.sh`
 and the Trivy gate before it can replace anything.
 
@@ -204,7 +204,7 @@ where you control the rebuild cadence:
 
 ```dockerfile
 FROM alpine:3.24
-RUN apk add nginx=1.30.4-r1 nginx-mod-http-brotli nginx-mod-http-zstd
+RUN apk add nginx=1.30.6-r0 nginx-mod-http-brotli nginx-mod-http-zstd
 ```
 
 To pin this image, pin its digest — every digest is Cosign-signed and carries an
@@ -246,7 +246,7 @@ front, an app runtime, a database, and a way into it.
 |---|---|
 | [`dementev/angie`](https://hub.docker.com/r/dementev/angie) — [source](https://github.com/vdementev/angie-docker) | Public-facing reverse proxy and TLS terminator — Angie, the nginx fork, with brotli, zstd and cache-purge |
 | **[`dementev/nginx`](https://hub.docker.com/r/dementev/nginx)** — this image | Static sites and SPAs behind that proxy — brotli/zstd siblings, Prometheus stub_status |
-| [`dementev/php-fpm-with-ext`](https://hub.docker.com/r/dementev/php-fpm-with-ext) — [source](https://github.com/vdementev/docker-php-fpm-with-ext) | PHP-FPM and CLI, PHP 7.0 → 8.5, with the extensions most projects reach for |
+| [`lotuswebagency/php`](https://hub.docker.com/r/lotuswebagency/php) — [source](https://github.com/LotusWebAgency/php) | PHP 7.0 → 8.5 compiled from source on Wolfi, hardened and signed — successor to the deprecated `dementev/php-fpm-with-ext` |
 | [`dementev/mysql-percona`](https://hub.docker.com/r/dementev/mysql-percona) — [source](https://github.com/vdementev/mysql-percona-docker) | Percona Server for MySQL 8.4 LTS, XtraBackup built in, no root inside |
 | [`dementev/adminer`](https://hub.docker.com/r/dementev/adminer) — [source](https://github.com/vdementev/adminer-docker) | Adminer 6 with every driver it supports, for reaching any of the above |
 
