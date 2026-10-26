@@ -16,7 +16,7 @@ for `linux/amd64` and `linux/arm64`.
 | Tag | Contents |
 |---|---|
 | `latest` | The newest build. |
-| `1.30.4` | The exact nginx version inside the image. |
+| `1.30.6` | The exact nginx version inside the image. |
 | `1.30` | The newest patch of that nginx minor. |
 
 Version tags are read out of the image *after* it is built and tested, so a tag
@@ -194,8 +194,8 @@ and scan.
 ## Versioning
 
 The apk package is deliberately unpinned. Alpine's branch index only ever
-carries the newest `-rN`, so a pinned `nginx=1.30.4-r1` would break the weekly
-rebuild the moment Alpine publishes `-r2`. What you get instead is a version tag
+carries the newest `-rN`, so a pinned `nginx=1.30.6-r0` would break the weekly
+rebuild the moment Alpine publishes `-r1`. What you get instead is a version tag
 derived from the built image and a weekly rebuild that has to pass `tests.sh`
 and the Trivy gate before it can replace anything.
 
@@ -204,7 +204,7 @@ where you control the rebuild cadence:
 
 ```dockerfile
 FROM alpine:3.24
-RUN apk add nginx=1.30.4-r1 nginx-mod-http-brotli nginx-mod-http-zstd
+RUN apk add nginx=1.30.6-r0 nginx-mod-http-brotli nginx-mod-http-zstd
 ```
 
 To pin this image, pin its digest — every digest is Cosign-signed and carries an

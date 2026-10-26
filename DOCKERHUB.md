@@ -12,7 +12,7 @@ by the proxy in front; this image just serves files fast and cheap.
 | Tag | Contents |
 |---|---|
 | `latest` | The newest build — every merge to `main`, plus a weekly rebuild for package updates. |
-| `1.30.4` | The exact nginx version inside the image. |
+| `1.30.6` | The exact nginx version inside the image. |
 | `1.30` | The newest patch of that nginx minor. |
 
 Version tags are read out of the image *after* it is built and tested, so a tag
